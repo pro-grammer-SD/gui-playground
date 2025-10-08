@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GUI Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      type="module"
-      src="https://cdn.jsdelivr.net/npm/lucide@0.545.0/+esm"
-    ></script>
+    <!-- UMD version exposes lucide globally -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   </head>
   <body class="bg-gray-100 font-sans">
     <div class="max-w-4xl mx-auto p-6">
@@ -51,23 +49,26 @@ sys.exit(app.exec())
     </div>
 
     <script>
-      lucide.createIcons();
+      document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
 
-      document.getElementById("runBtn").addEventListener("click", async () => {
-        const code = document.getElementById("code").value;
-        const res = await fetch("/run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+        const runBtn = document.getElementById("runBtn");
+        runBtn.addEventListener("click", async () => {
+          const code = document.getElementById("code").value;
+          const res = await fetch("/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json();
+          const port = data.vnc_port;
+          const iframe = document.createElement("iframe");
+          iframe.width = "800";
+          iframe.height = "600";
+          iframe.src = `/noVNC/vnc.html?host=${window.location.hostname}&port=${port}`;
+          document.getElementById("vnc_container").innerHTML = "";
+          document.getElementById("vnc_container").appendChild(iframe);
         });
-        const data = await res.json();
-        const port = data.vnc_port;
-        const iframe = document.createElement("iframe");
-        iframe.width = "800";
-        iframe.height = "600";
-        iframe.src = `/noVNC/vnc.html?host=${window.location.hostname}&port=${port}`;
-        document.getElementById("vnc_container").innerHTML = "";
-        document.getElementById("vnc_container").appendChild(iframe);
       });
     </script>
   </body>
