@@ -1,2 +1,8 @@
+tk
+PySide6
+PyQt5
+kivy
+PySimpleGUI
+flet
+customtkinter
 flask
-websockify

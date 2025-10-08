@@ -1,21 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Online GUI Playground</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python GUI Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/lucide@0.545.0/+esm"
+    ></script>
   </head>
-  <body>
-    <h2>Write Python GUI code:</h2>
-    <textarea id="code" rows="10" cols="60">
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold mb-4">Python GUI Playground</h1>
+
+      <textarea
+        id="code"
+        rows="10"
+        class="w-full p-2 border rounded-lg mb-4 font-mono"
+      >
 import tkinter as tk
 root = tk.Tk()
 root.geometry("400x300")
 tk.Label(root, text="Hello!").pack()
 root.mainloop()
   </textarea
-    >
-    <br />
-    <button onclick="runCode()">Run</button>
-    <div id="vnc_container"></div>
+      >
+
+      <button
+        onclick="runCode()"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 mb-4"
+      >
+        <i data-lucide="play"></i> Run
+      </button>
+
+      <div id="sessions" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
 
     <script>
       async function runCode() {
@@ -26,13 +46,34 @@ root.mainloop()
           body: JSON.stringify({ code }),
         });
         let data = await res.json();
-        let port = data.vnc_port;
-        let iframe = document.createElement("iframe");
-        iframe.width = 800;
-        iframe.height = 600;
-        iframe.src = `/noVNC/vnc.html?host=localhost&port=${port}`;
-        document.getElementById("vnc_container").innerHTML = "";
-        document.getElementById("vnc_container").appendChild(iframe);
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        let container = document.getElementById("sessions");
+        let card = document.createElement("div");
+        card.className = "bg-white p-4 rounded-lg shadow";
+
+        let title = document.createElement("h2");
+        title.textContent = `Session (${data.gui})`;
+        title.className = "font-semibold text-lg mb-2";
+        card.appendChild(title);
+
+        if (data.gui.toLowerCase() === "flet") {
+          let iframe = document.createElement("iframe");
+          iframe.src = `http://localhost:${data.port}`;
+          iframe.className = "w-full h-80 border rounded";
+          card.appendChild(iframe);
+        } else {
+          let iframe = document.createElement("iframe");
+          iframe.src = `/noVNC/vnc.html?host=localhost&port=${data.port}`;
+          iframe.className = "w-full h-80 border rounded";
+          card.appendChild(iframe);
+        }
+
+        container.appendChild(card);
+        lucide.createIcons();
       }
     </script>
   </body>
