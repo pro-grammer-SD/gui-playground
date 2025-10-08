@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: gui-playground
+    env: docker
+    plan: free
+    autoDeploy: true
