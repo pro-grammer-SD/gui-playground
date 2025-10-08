@@ -3,78 +3,72 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Python GUI Playground</title>
+    <title>GUI Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script
       type="module"
       src="https://cdn.jsdelivr.net/npm/lucide@0.545.0/+esm"
     ></script>
   </head>
-  <body class="bg-gray-100 p-6">
-    <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold mb-4">Python GUI Playground</h1>
-
-      <textarea
-        id="code"
-        rows="10"
-        class="w-full p-2 border rounded-lg mb-4 font-mono"
+  <body class="bg-gray-100 font-sans">
+    <div class="max-w-4xl mx-auto p-6">
+      <div
+        class="bg-yellow-200 text-yellow-900 p-4 rounded mb-6 flex items-center gap-2"
       >
-import tkinter as tk
-root = tk.Tk()
-root.geometry("400x300")
-tk.Label(root, text="Hello!").pack()
-root.mainloop()
-  </textarea
-      >
+        <i data-lucide="alert-triangle"></i>
+        <span>Tkinter removed. Supported: PySide6, PyQt6, Kivy, Flet</span>
+      </div>
 
-      <button
-        onclick="runCode()"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 mb-4"
-      >
-        <i data-lucide="play"></i> Run
-      </button>
+      <div class="bg-white p-6 rounded shadow-md">
+        <h2 class="text-xl font-bold mb-2">Write Python GUI code:</h2>
+        <textarea id="code" rows="12" class="w-full p-2 border rounded mb-4">
+from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
+import sys
 
-      <div id="sessions" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+app = QApplication(sys.argv)
+window = QWidget()
+layout = QVBoxLayout()
+label = QLabel("Hello!")
+button = QPushButton("Click me")
+button.clicked.connect(lambda: label.setText("Clicked!"))
+layout.addWidget(label)
+layout.addWidget(button)
+window.setLayout(layout)
+window.show()
+sys.exit(app.exec())
+    </textarea
+        >
+
+        <button
+          id="runBtn"
+          class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          <i data-lucide="play-circle"></i> Run
+        </button>
+
+        <div id="vnc_container" class="mt-6"></div>
+      </div>
     </div>
 
     <script>
-      async function runCode() {
-        let code = document.getElementById("code").value;
-        let res = await fetch("/run", {
+      lucide.createIcons();
+
+      document.getElementById("runBtn").addEventListener("click", async () => {
+        const code = document.getElementById("code").value;
+        const res = await fetch("/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
         });
-        let data = await res.json();
-        if (data.error) {
-          alert(data.error);
-          return;
-        }
-
-        let container = document.getElementById("sessions");
-        let card = document.createElement("div");
-        card.className = "bg-white p-4 rounded-lg shadow";
-
-        let title = document.createElement("h2");
-        title.textContent = `Session (${data.gui})`;
-        title.className = "font-semibold text-lg mb-2";
-        card.appendChild(title);
-
-        if (data.gui.toLowerCase() === "flet") {
-          let iframe = document.createElement("iframe");
-          iframe.src = `http://localhost:${data.port}`;
-          iframe.className = "w-full h-80 border rounded";
-          card.appendChild(iframe);
-        } else {
-          let iframe = document.createElement("iframe");
-          iframe.src = `/noVNC/vnc.html?host=localhost&port=${data.port}`;
-          iframe.className = "w-full h-80 border rounded";
-          card.appendChild(iframe);
-        }
-
-        container.appendChild(card);
-        lucide.createIcons();
-      }
+        const data = await res.json();
+        const port = data.vnc_port;
+        const iframe = document.createElement("iframe");
+        iframe.width = "800";
+        iframe.height = "600";
+        iframe.src = `/noVNC/vnc.html?host=${window.location.hostname}&port=${port}`;
+        document.getElementById("vnc_container").innerHTML = "";
+        document.getElementById("vnc_container").appendChild(iframe);
+      });
     </script>
   </body>
 </html>
