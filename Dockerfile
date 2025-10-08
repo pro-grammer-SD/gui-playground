@@ -1,26 +1,31 @@
-# Stage 1: Build environment
+# Stage 1: Builder
 FROM python:3.10-slim AS builder
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends xvfb x11vnc websockify python3-tk && \
+    apt-get install -y --no-install-recommends \
+    xvfb x11vnc websockify python3-tk && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY . .
-
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Runtime (smaller image)
+COPY . .
+
+# Stage 2: Runtime
 FROM python:3.10-slim
 
-# Copy installed system binaries from builder
-COPY --from=builder /usr/bin/xvfb-run /usr/bin/Xvfb /usr/bin/x11vnc /usr/bin/websockify /usr/bin/
-COPY --from=builder /usr/lib /usr/lib
-COPY --from=builder /app /app
+# Install minimal runtime deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    xvfb x11vnc websockify python3-tk && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+COPY --from=builder /app /app
+
 ENV DISPLAY=:99
 ENV PORT=5000
-EXPOSE 5000
 
+EXPOSE 5000
 CMD ["python3", "app.py"]
