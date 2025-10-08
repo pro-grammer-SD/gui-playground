@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Online GUI Playground</title>
+  </head>
+  <body>
+    <h2>Write Python GUI code:</h2>
+    <textarea id="code" rows="10" cols="60">
+import tkinter as tk
+root = tk.Tk()
+root.geometry("400x300")
+tk.Label(root, text="Hello!").pack()
+root.mainloop()
+  </textarea
+    >
+    <br />
+    <button onclick="runCode()">Run</button>
+    <div id="vnc_container"></div>
+
+    <script>
+      async function runCode() {
+        let code = document.getElementById("code").value;
+        let res = await fetch("/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
+        let data = await res.json();
+        let port = data.vnc_port;
+        let iframe = document.createElement("iframe");
+        iframe.width = 800;
+        iframe.height = 600;
+        iframe.src = `/noVNC/vnc.html?host=localhost&port=${port}`;
+        document.getElementById("vnc_container").innerHTML = "";
+        document.getElementById("vnc_container").appendChild(iframe);
+      }
+    </script>
+  </body>
+</html>
