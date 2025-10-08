@@ -4,3 +4,9 @@ services:
     env: docker
     plan: free
     autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: "5000"
+    healthCheckPath: "/"
+    logStreamingEnabled: true
